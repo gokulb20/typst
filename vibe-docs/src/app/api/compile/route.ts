@@ -4,10 +4,10 @@ import { compileToPages, compileTypst } from '@/lib/typst';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { code, format } = body;
+    const { code, format, images } = body;
 
     if (format === 'pdf') {
-      const result = await compileTypst(code, 'pdf');
+      const result = await compileTypst(code, 'pdf', { images });
       if (!result.success) {
         return NextResponse.json({ error: result.error }, { status: 400 });
       }
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Default: compile to preview pages
-    const result = await compileToPages(code);
+    const result = await compileToPages(code, { images });
 
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });

@@ -1,9 +1,9 @@
 // Typst compilation utilities
-// Uses typst CLI on server or WASM in browser (future)
+// Uses typst CLI on server
 
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { writeFile, readFile, unlink, mkdir } from 'fs/promises';
+import { writeFile, readFile, unlink, mkdir, readdir, rm } from 'fs/promises';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
 
@@ -19,6 +19,10 @@ export interface CompileResult {
   error?: string;
 }
 
+export interface CompileOptions {
+  images?: { path: string; data: string }[]; // Base64 images to save
+}
+
 export async function ensureTempDir(): Promise<void> {
   try {
     await mkdir(TEMP_DIR, { recursive: true });
@@ -27,17 +31,43 @@ export async function ensureTempDir(): Promise<void> {
   }
 }
 
+async function saveImages(projectDir: string, images: { path: string; data: string }[]): Promise<void> {
+  for (const img of images) {
+    if (!img.data) continue;
+    const imgPath = join(projectDir, img.path);
+    const buffer = Buffer.from(img.data, 'base64');
+    await writeFile(imgPath, buffer);
+  }
+}
+
+async function cleanupProjectDir(projectDir: string): Promise<void> {
+  try {
+    await rm(projectDir, { recursive: true, force: true });
+  } catch (e) {
+    // Ignore cleanup errors
+  }
+}
+
 export async function compileTypst(
   code: string,
-  format: 'pdf' | 'png' | 'svg' = 'png'
+  format: 'pdf' | 'png' | 'svg' = 'png',
+  options: CompileOptions = {}
 ): Promise<CompileResult> {
   await ensureTempDir();
 
   const id = randomUUID();
-  const inputPath = join(TEMP_DIR, `${id}.typ`);
-  const outputPath = join(TEMP_DIR, `${id}.${format}`);
+  const projectDir = join(TEMP_DIR, id);
+  await mkdir(projectDir, { recursive: true });
+
+  const inputPath = join(projectDir, 'main.typ');
+  const outputPath = join(projectDir, `output.${format}`);
 
   try {
+    // Save images if provided
+    if (options.images && options.images.length > 0) {
+      await saveImages(projectDir, options.images);
+    }
+
     // Write the Typst source
     await writeFile(inputPath, code, 'utf-8');
 
@@ -46,7 +76,7 @@ export async function compileTypst(
       ? `typst compile "${inputPath}" "${outputPath}" --format png --ppi 144`
       : `typst compile "${inputPath}" "${outputPath}"`;
 
-    await execAsync(cmd, { timeout: 30000 });
+    await execAsync(cmd, { timeout: 30000, cwd: projectDir });
 
     // Read the output
     if (format === 'svg') {
@@ -64,17 +94,14 @@ export async function compileTypst(
       error: error.stderr || error.message || 'Compilation failed',
     };
   } finally {
-    // Cleanup
-    try {
-      await unlink(inputPath);
-      await unlink(outputPath);
-    } catch (e) {
-      // Ignore cleanup errors
-    }
+    await cleanupProjectDir(projectDir);
   }
 }
 
-export async function compileToPages(code: string): Promise<{
+export async function compileToPages(
+  code: string,
+  options: CompileOptions = {}
+): Promise<{
   success: boolean;
   pages?: string[]; // Base64 encoded PNGs
   error?: string;
@@ -82,41 +109,45 @@ export async function compileToPages(code: string): Promise<{
   await ensureTempDir();
 
   const id = randomUUID();
-  const inputPath = join(TEMP_DIR, `${id}.typ`);
-  const outputPattern = join(TEMP_DIR, `${id}-{n}.png`);
+  const projectDir = join(TEMP_DIR, id);
+  await mkdir(projectDir, { recursive: true });
+
+  const inputPath = join(projectDir, 'main.typ');
+  const outputPattern = join(projectDir, 'page-{n}.png');
 
   try {
+    // Save images if provided
+    if (options.images && options.images.length > 0) {
+      await saveImages(projectDir, options.images);
+    }
+
+    // Write the Typst source
     await writeFile(inputPath, code, 'utf-8');
 
     // Compile all pages
     await execAsync(
       `typst compile "${inputPath}" "${outputPattern}" --format png --ppi 144`,
-      { timeout: 60000 }
+      { timeout: 60000, cwd: projectDir }
     );
 
     // Find all generated pages
-    const { stdout } = await execAsync(`ls ${TEMP_DIR}/${id}-*.png 2>/dev/null || true`);
-    const pageFiles = stdout.trim().split('\n').filter(Boolean).sort();
+    const files = await readdir(projectDir);
+    const pageFiles = files
+      .filter(f => f.startsWith('page-') && f.endsWith('.png'))
+      .sort((a, b) => {
+        const numA = parseInt(a.match(/page-(\d+)/)?.[1] || '0');
+        const numB = parseInt(b.match(/page-(\d+)/)?.[1] || '0');
+        return numA - numB;
+      });
 
     if (pageFiles.length === 0) {
-      // Single page output (no pattern expansion)
-      const singleOutput = join(TEMP_DIR, `${id}-{n}.png`);
-      try {
-        const buffer = await readFile(singleOutput);
-        return {
-          success: true,
-          pages: [buffer.toString('base64')]
-        };
-      } catch {
-        return { success: false, error: 'No output generated' };
-      }
+      return { success: false, error: 'No output generated' };
     }
 
     const pages: string[] = [];
     for (const file of pageFiles) {
-      const buffer = await readFile(file);
+      const buffer = await readFile(join(projectDir, file));
       pages.push(buffer.toString('base64'));
-      await unlink(file);
     }
 
     return { success: true, pages };
@@ -126,8 +157,6 @@ export async function compileToPages(code: string): Promise<{
       error: error.stderr || error.message || 'Compilation failed',
     };
   } finally {
-    try {
-      await unlink(inputPath);
-    } catch (e) {}
+    await cleanupProjectDir(projectDir);
   }
 }

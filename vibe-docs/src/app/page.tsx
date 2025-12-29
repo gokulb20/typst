@@ -12,11 +12,17 @@ interface Message {
   timestamp: Date;
 }
 
+interface GeneratedImage {
+  path: string;
+  data: string;
+}
+
 export default function Home() {
   const [documentType, setDocumentType] = useState<'document' | 'slides'>('slides');
   const [messages, setMessages] = useState<Message[]>([]);
   const [pages, setPages] = useState<string[]>([]);
   const [currentCode, setCurrentCode] = useState<string>('');
+  const [currentImages, setCurrentImages] = useState<GeneratedImage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,19 +48,28 @@ export default function Home() {
         throw new Error(data.error || 'Generation failed');
       }
 
-      // Add assistant message
+      // Build assistant message
+      let messageContent = data.error
+        ? `I generated the ${documentType === 'slides' ? 'slides' : 'document'}, but there was a compilation error. Let me try to fix it.`
+        : `Done! I've ${currentCode ? 'updated' : 'created'} your ${documentType === 'slides' ? 'presentation' : 'document'}.`;
+
+      if (data.imagesGenerated > 0) {
+        messageContent += ` Generated ${data.imagesGenerated} image${data.imagesGenerated > 1 ? 's' : ''}.`;
+      }
+
       const assistantMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: data.error
-          ? `I generated the ${documentType === 'slides' ? 'slides' : 'document'}, but there was a compilation error. Let me try to fix it.`
-          : `Done! I've ${currentCode ? 'updated' : 'created'} your ${documentType === 'slides' ? 'presentation' : 'document'}. You can see the preview on the right.`,
+        content: messageContent,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, assistantMessage]);
 
       // Update state
       setCurrentCode(data.code);
+      if (data.images) {
+        setCurrentImages(data.images);
+      }
       if (data.pages && data.pages.length > 0) {
         setPages(data.pages);
       }
@@ -84,7 +99,11 @@ export default function Home() {
       const response = await fetch('/api/compile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: currentCode, format: 'pdf' }),
+        body: JSON.stringify({
+          code: currentCode,
+          format: 'pdf',
+          images: currentImages,
+        }),
       });
 
       if (!response.ok) {
@@ -108,18 +127,19 @@ export default function Home() {
     } finally {
       setIsExporting(false);
     }
-  }, [currentCode, documentType]);
+  }, [currentCode, currentImages, documentType]);
 
   const handleNewDocument = useCallback(() => {
     setMessages([]);
     setPages([]);
     setCurrentCode('');
+    setCurrentImages([]);
     setError(null);
   }, []);
 
   const handleTypeChange = useCallback((type: 'document' | 'slides') => {
     setDocumentType(type);
-    // Optionally reset when switching types
+    // Reset when switching types
     if (type !== documentType) {
       handleNewDocument();
     }
