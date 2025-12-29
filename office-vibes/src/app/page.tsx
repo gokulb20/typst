@@ -146,16 +146,16 @@ export default function Home() {
   }, [documentType, handleNewDocument]);
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen p-4 gap-4">
       <Header
         documentType={documentType}
         onTypeChange={handleTypeChange}
         onNewDocument={handleNewDocument}
       />
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden gap-4">
         {/* Chat sidebar */}
-        <div className="w-[400px] min-w-[350px] max-w-[500px] border-r border-white/10">
+        <div className="w-[420px] min-w-[380px] glass-card rounded-2xl overflow-hidden">
           <Chat
             documentType={documentType}
             onGenerate={handleGenerate}
@@ -166,7 +166,7 @@ export default function Home() {
         </div>
 
         {/* Preview area */}
-        <div className="flex-1">
+        <div className="flex-1 glass-card rounded-2xl overflow-hidden">
           <Preview
             pages={pages}
             documentType={documentType}

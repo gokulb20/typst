@@ -199,14 +199,17 @@ function getDocumentSystemPrompt(): string {
 
 CRITICAL RULES:
 1. ONLY output valid Typst code - no explanations, no markdown wrapper
-2. Use modern Typst syntax (v0.11+)
+2. Use modern Typst syntax (v0.12+)
 3. ALWAYS use dark theme: dark background with light text
 4. Create visually stunning layouts with proper spacing
+5. DO NOT specify font families - use the default font
+6. DO NOT use "underline: true" - use #underline[text] instead
 
-DARK THEME DEFAULTS:
+DARK THEME TEMPLATE:
 #set page(fill: rgb("#0f0f1a"), margin: 1in)
-#set text(fill: rgb("#e4e4e7"), font: "Inter", size: 11pt)
+#set text(fill: rgb("#e4e4e7"), size: 11pt)
 #show heading: set text(fill: rgb("#f4f4f5"))
+#show link: it => text(fill: rgb("#60a5fa"))[#underline[#it]]
 
 TYPST BASICS:
 - Headings: = Title, == Section, === Subsection
@@ -230,14 +233,14 @@ CRITICAL RULES:
 1. ONLY output valid Typst code - no explanations, no markdown
 2. Always import polylux: #import "@preview/polylux:0.3.1": *
 3. ALWAYS use dark theme - this is mandatory
-4. Create visually stunning slides with great typography
+4. DO NOT specify font families - use the default font
+5. DO NOT use invalid syntax like "underline: true"
 
 MANDATORY DARK THEME STRUCTURE:
-\`\`\`typst
 #import "@preview/polylux:0.3.1": *
 
 #set page(paper: "presentation-16-9", fill: rgb("#0a0a0f"))
-#set text(fill: rgb("#f4f4f5"), font: "Inter", size: 24pt)
+#set text(fill: rgb("#f4f4f5"), size: 24pt)
 
 #show heading.where(level: 1): set text(fill: rgb("#ffffff"), size: 56pt, weight: "bold")
 #show heading.where(level: 2): set text(fill: rgb("#a5b4fc"), size: 40pt, weight: "semibold")
@@ -260,7 +263,6 @@ MANDATORY DARK THEME STRUCTURE:
     - Third key point
   ]
 ]
-\`\`\`
 
 STYLING TIPS:
 - Use accent colors: rgb("#6366f1") (indigo), rgb("#8b5cf6") (violet), rgb("#06b6d4") (cyan)
