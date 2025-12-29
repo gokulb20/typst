@@ -1,14 +1,14 @@
 version: '3.8'
 
 services:
-  vibe-docs:
+  office-vibes:
     build: .
-    container_name: vibe-docs
+    container_name: office-vibes
     ports:
       - "${PORT:-3000}:3000"
     environment:
       - GROK_API_KEY=${GROK_API_KEY}
       - NODE_ENV=production
     volumes:
-      - /tmp/vibe-docs:/tmp/vibe-docs
+      - /tmp/office-vibes:/tmp/vibe-docs
     restart: unless-stopped

@@ -1,4 +1,4 @@
-# Vibe Docs
+# Office Vibes
 
 AI-powered document and presentation creator. Like Cursor, but for docs and slides.
 
@@ -11,61 +11,62 @@ AI-powered document and presentation creator. Like Cursor, but for docs and slid
 - **PDF Export** - Download production-ready PDFs
 - **Slides Mode** - Create presentations with Polylux
 - **Document Mode** - Create professional documents
+- **Image Generation** - AI generates images when you ask
+- **Dark Mode** - Beautiful dark theme by default
 - **Powered by Grok** - Fast, intelligent code generation
 
 ## Quick Start
 
-### Prerequisites
-
-- Node.js 20+
-- Typst CLI installed (`curl -fsSL https://typst.community/typst-install/install.sh | sh`)
-- Grok API key from [console.x.ai](https://console.x.ai/)
-
-### Setup
+### 1. Clone the repo
 
 ```bash
-cd vibe-docs
+git clone https://github.com/gokulb20/typst.git
+cd typst/office-vibes
+```
 
-# Install dependencies
+### 2. Install Typst CLI
+
+```bash
+# macOS/Linux
+curl -fsSL https://typst.community/typst-install/install.sh | sh
+
+# Or with Homebrew
+brew install typst
+```
+
+### 3. Install dependencies & run
+
+```bash
 npm install
 
-# Configure environment
-cp .env.example .env
-# Edit .env and add your GROK_API_KEY
+# Create .env file with your Grok API key
+echo "GROK_API_KEY=your-key-here" > .env
 
-# Run development server
+# Start the app
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) and start creating!
 
-### Docker
-
-```bash
-# Build and run with Docker
-docker compose up --build
-
-# Or with environment variable
-GROK_API_KEY=your-key docker compose up --build
-```
-
 ## How It Works
 
 ```
-You: "Create a pitch deck for my AI startup that helps doctors"
+You: "Create a pitch deck for my AI startup with images"
      ↓
-[Grok API] → Generates Typst/Polylux code
+[Grok] → Generates Typst/Polylux code
      ↓
-[Typst Compiler] → Renders to PNG/PDF
+[Grok Aurora] → Generates images (when requested)
      ↓
-You: See beautiful slides instantly!
+[Typst] → Renders to PNG/PDF
+     ↓
+You: See beautiful dark-themed slides!
 ```
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────┐
-│              Vibe Docs UI                   │
+│            Office Vibes UI                  │
 │  ┌─────────────┐    ┌──────────────────┐   │
 │  │  Chat       │    │   Live Preview   │   │
 │  │  Interface  │    │   (PNG render)   │   │
@@ -75,55 +76,37 @@ You: See beautiful slides instantly!
 │  /api/generate  │  /api/compile             │
 ├─────────────────────────────────────────────┤
 │   Grok API      │      Typst CLI            │
-│  (code gen)     │   (compilation)           │
+│  (code + img)   │   (compilation)           │
 └─────────────────────────────────────────────┘
 ```
 
-## API Endpoints
+## Try These Prompts
 
-### POST /api/generate
+**Slides:**
+- "Create a pitch deck for my AI startup"
+- "Make a presentation about climate change with images"
+- "Build a quarterly business review"
 
-Generate document/slides from natural language.
-
-```json
-{
-  "prompt": "Create a quarterly report",
-  "documentType": "document",
-  "existingCode": "optional existing typst code"
-}
-```
-
-### POST /api/compile
-
-Compile Typst code to PDF or preview images.
-
-```json
-{
-  "code": "#set page(...)\n...",
-  "format": "pdf"
-}
-```
-
-## Templates
-
-Pre-built templates in `/templates`:
-
-- **slide-themes.typ** - Dark modern, light clean, gradient themes
-- **document-templates.typ** - Professional, minimal, technical, resume
+**Documents:**
+- "Write a professional proposal"
+- "Create a resume for a software engineer"
+- "Make a technical specification document"
 
 ## Tech Stack
 
 - **Frontend**: Next.js 14, React, Tailwind CSS
-- **LLM**: Grok (xAI) for code generation
+- **LLM**: Grok 3 (xAI) for code generation
+- **Images**: Grok Aurora for image generation
 - **Typesetting**: Typst + Polylux
-- **Styling**: Tailwind CSS
+- **Theme**: Dark mode default
 
 ## Environment Variables
 
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `GROK_API_KEY` | Your xAI Grok API key | Yes |
-| `PORT` | Server port (default: 3000) | No |
+
+Get your API key at [console.x.ai](https://console.x.ai/)
 
 ## License
 

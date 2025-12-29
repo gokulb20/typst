@@ -19,9 +19,9 @@ export default function Header({
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-vibe-500 to-purple-600
                       flex items-center justify-center">
-          <span className="text-white font-bold text-sm">V</span>
+          <span className="text-white font-bold text-sm">O</span>
         </div>
-        <span className="font-semibold text-lg">Vibe Docs</span>
+        <span className="font-semibold text-lg">Office Vibes</span>
       </div>
 
       {/* Document type toggle */}
