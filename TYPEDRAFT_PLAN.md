@@ -1,6 +1,19 @@
 # TypeDraft Implementation Plan
 ## AI-Powered Document Generation Tool
 
+---
+
+## Decisions Made
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **Frontend** | React + Vite | Popular, rich ecosystem |
+| **Typst Code Visibility** | Hidden with toggle | Clean UX, power user option |
+| **AI Provider** | x.ai (Grok) | User preference, OpenAI-compatible API |
+| **Model** | grok-3-fast (testing), grok-4 (production) | Balance speed/quality |
+
+---
+
 ### Current State Analysis
 
 **What Exists:**
@@ -29,7 +42,7 @@
 ├─────────────────────────────────────────────────────────────┤
 │  Frontend (React/Vite)          │  Backend (Rust/Actix)     │
 │  ├─ Content Input               │  ├─ /api/generate         │
-│  ├─ Template Selector           │  │   └─ Ollama → Typst    │
+│  ├─ Template Selector           │  │   └─ x.ai → Typst      │
 │  ├─ Chat Interface              │  ├─ /api/compile          │
 │  ├─ PDF Preview (iframe/embed)  │  │   └─ Typst → PDF       │
 │  └─ Export Button               │  ├─ /api/iterate          │
